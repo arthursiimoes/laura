@@ -2,245 +2,468 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ENIGMA - LAURA</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
   <style>
-
-    /* ADIÇÃO PARA REMOVER BORDAS BRANCAS EM CELULAR */
-    html, body {
-      background: linear-gradient(135deg, #0a0f24, #1a2240);
-      background-color: #0a0f24;
-      color-scheme: dark;
-      overscroll-behavior: none;
-      margin: 0;
-      padding: 0;
+    /* ================= RESET E BASE ================= */
+    :root {
+      --primary-pink: #ff5fa2;
+      --secondary-pink: #ff7ac3;
+      --spotify-green: #1db954;
+      --bg-dark: #0a0f24;
+      --bg-gradient: linear-gradient(135deg, #0a0f24 0%, #1a2240 100%);
+      --card-bg: rgba(255, 255, 255, 0.06);
+      --card-border: 1px solid rgba(255, 255, 255, 0.1);
+      --text-muted: #b3b3b3;
     }
 
-    * {
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      background: var(--bg-gradient);
+      background-color: var(--bg-dark);
+      color-scheme: dark;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      overflow-x: hidden;
     }
 
     body {
-      margin: 0;
-      padding: 20px;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0a0f24, #1a2240);
-      color: #fff;
-      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      -webkit-text-size-adjust: 100%;
+      padding: 20px;
+      gap: 25px;
     }
 
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    /* ================= CARDS GERAIS ================= */
     .card {
       width: 100%;
-      max-width: 420px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 18px;
-      padding: 25px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 0.7s ease;
+      max-width: 440px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px);} 
-      to { opacity: 1; transform: translateY(0);} 
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-h2 {
-  margin: 20px 0 12px 0;
-  font-weight: 600;
-}
-
-p {
-  opacity: 0.9;
-  margin: 12px 0;
-}
-
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.08);
+    h2 {
+      margin: 0 0 16px 0;
+      font-weight: 700;
+      font-size: 1.5rem;
       color: #fff;
-      font-size: 15px;
     }
+    
+    .text-center { text-align: center; }
+    .text-pink { color: var(--secondary-pink); }
+    p { opacity: 0.85; margin: 12px 0; line-height: 1.6; }
 
-    button {
+    /* Inputs e Botões */
+    input, .btn-action {
       width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.3s;
+    }
+    input {
       margin-top: 15px;
-      padding: 12px;
-      background: linear-gradient(135deg, #ff5fa2, #ff7ac3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+    input:focus { border-color: var(--secondary-pink); background: rgba(255, 255, 255, 0.08); }
+
+    .btn-action {
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
       border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       color: #fff;
-      transition: 0.2s;
+      box-shadow: 0 4px 15px rgba(255, 95, 162, 0.3);
     }
-    button:hover { transform: scale(1.03); }
+    .btn-action:hover { transform: translateY(-2px); }
 
     .hidden { display: none !important; }
+    .feedback-msg { margin-top: 10px; font-weight: 500; min-height: 24px; }
 
-    /* Countdown */
-    #countdownBox {
-      margin-top: 15px;
-      padding: 15px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.4rem;
-      letter-spacing: 1px;
-    }
-
-    .countdown-photo {
+    /* ================= JOGO DA MEMÓRIA (CSS CORRIGIDO) ================= */
+    .memory-card {
+      position: relative;
       width: 100%;
-      max-width: 320px;
-      border-radius: 18px;
-      filter: brightness(0.9) contrast(1.1) saturate(1.2) drop-shadow(0 4px 12px rgba(0,0,0,0.35));
-      margin-top: 20px;
+      padding-top: 100%; /* Aspect Ratio 1:1 */
+      border-radius: 16px;
+      background-color: rgba(255, 122, 195, 0.1);
+      border: 2px solid rgba(255, 122, 195, 0.3);
+      cursor: pointer;
+      transition: transform 0.2s;
     }
 
-    /* Tela inicial */
-    #introPage h2 { font-size: 26px; text-align:center; }
-    #introPage p { text-align:center; }
-    #countdownPage { text-align:center; }
-  </style>
+    .memory-card:active { transform: scale(0.95); }
 
+    .memory-card img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 14px;
+      opacity: 0; /* Escondido por padrão */
+      transition: opacity 0.3s ease;
+      pointer-events: none; /* Evita arrastar a imagem */
+    }
+
+    /* Classes controladas pelo JS */
+    .memory-card.flip img { opacity: 1; } /* Mostra a foto */
+    .memory-card.winner { 
+      border-color: var(--spotify-green) !important; 
+      box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
+    }
+
+    /* ================= PLAYER STYLE ================= */
+    #musicPlayerCard { padding: 25px; }
+    .player-header-text {
+      text-align: center; margin-bottom: 20px;
+      font-size: 0.9rem; font-weight: 600;
+      text-transform: uppercase; color: var(--secondary-pink);
+    }
+    .spotify-container { display: flex; align-items: center; gap: 16px; }
+    .album-cover { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; }
+    .track-info { flex: 1; overflow: hidden; }
+    .track-name { font-weight: 600; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .artist-name { font-size: 0.9rem; color: var(--text-muted); }
+    
+    .progress-area {
+      margin-top: 20px; width: 100%; display: flex; align-items: center; gap: 12px;
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .progress-bar {
+      flex: 1; height: 5px; background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px; cursor: pointer; position: relative;
+    }
+    .progress-current {
+      height: 100%; background: var(--spotify-green); border-radius: 10px; width: 0%;
+      transition: width 0.1s linear;
+    }
+    .controls { display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 18px; }
+    .control-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); }
+    .control-btn svg { width: 24px; height: 24px; }
+    .play-pause-btn {
+      width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .play-pause-btn:hover { transform: scale(1.05); }
+    
+    /* Countdown Box */
+    #countdownBox {
+      margin-top: 20px; padding: 18px; background: rgba(0, 0, 0, 0.2);
+      border: var(--card-border); border-radius: 14px;
+      text-align: center; font-weight: 700; font-size: 1.5rem; color: var(--secondary-pink);
+    }
+  </style>
 </head>
 <body>
 
-  <!-- TELA INICIAL ORGANIZADA -->
-  <div class="card" id="introPage">
-    <h2>Bem-Vinda, Laura!</h2>
+  <div class="card text-center" id="introPage">
+    <h2 class="text-pink" style="margin-top: 20px;">Bem-Vinda, Laura!</h2>
     <p>Antes de começar, vamos a uma explicação breve:</p>
     <p>Cada pergunta te leva a um passo mais perto de algo que preparei pra voce com muito carinho.</p>
     <p>Voce passará por enigmas, perguntas, e alguns jogos que preparei para conseguir desbloquear a próxima fase, espero que goste.
     <h2>BOA SORTE!</h2>
-    <button onclick="startGame()">VAMOS COMEÇAR?</button>
+    <button class="btn-action" onclick="startGame()">VAMOS COMEÇAR?</button>
   </div>
 
-  <!-- ENIGMA 1 -->
   <div class="card hidden" id="page1">
     <h2>Pergunta #1 (Charada)</h2>
     <p>“Tenho memória, mas não penso. Guardo momentos, mas não falo. Sou pequena, mas seguro o nosso mundo inteiro. O que sou?”</p>
+    <input id="answer1" placeholder="Digite sua resposta...">
+    <button class="btn-action" onclick="checkAnswer1()">Enviar</button>
+    <p id="feedback1" class="feedback-msg"></p>
 
-    <input id="answer1" placeholder="Digite a resposta...">
-    <button onclick="checkAnswer1()">Enviar</button>
-    <p id="feedback1"></p>
-
-    <div id="hintBox" class="hidden">
-      <p><b>DICA:</b> Procure onde tudo começou...</p>
-      <button onclick="goToPage2()">Ir para próxima pista</button>
+    <div id="hintBox" class="hidden" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+      <p><b>💡 DICA:</b> Procure onde tudo começou...</p>
+      <button class="btn-action" style="background: rgba(255,255,255,0.1);" onclick="goToPage2()">Próxima Pista</button>
     </div>
   </div>
 
-  <!-- ENIGMA 2 -->
   <div class="card hidden" id="page2">
     <h2>Pergunta #2 (Momentos)</h2>
     <p>“Quando foi a primeira vez onde nossos olhares falaram mais do que palavras?”</p>
-
-    <input id="answer2" placeholder="Digite a resposta...">
-    <button onclick="checkAnswer2()">Enviar</button>
-    <p id="feedback2"></p>
+    <input id="answer2" placeholder="Ex: DD/MM">
+    <button class="btn-action" onclick="checkAnswer2()">Enviar</button>
+    <p id="feedback2" class="feedback-msg"></p>
   </div>
 
-  <!-- COUNTDOWN FINAL -->
-  <div class="card hidden" id="countdownPage">
-    <img src="FOTO2.jpg" class="countdown-photo" />
-    <h2>PARABÉNS</h2>
+  <div class="card hidden text-center" id="countdownPage">
+    <h2 style="font-size: 2rem; color: var(--secondary-pink);">PARABÉNS!</h2>
     <p>Você passou da primeira fase!</p>
     <p>Foi fácil, né? Bom... foi apenas o começo para você entender a dinâmica; daqui pra frente será diferente, boa sorte!</p>
-    <h2>Próxima pista em:</h2>
+    <h2 style="margin-top: 25px; font-size: 1.2rem;">A próxima fase libera em:</h2>
     <div id="countdownBox">Carregando...</div>
   </div>
 
+  <div class="card hidden" id="musicPlayerCard">
+    <div class="player-header-text">Primeira pista desbloqueada</div>
+    <div class="spotify-container">
+      <img src="capa.jpg" alt="Capa" class="album-cover" id="coverImg">
+      <div class="track-info">
+        <div class="track-name">Always And Forever</div>
+        <div class="artist-name">tzn</div>
+      </div>
+    </div>
+    <div class="progress-area">
+      <span id="currentTime">0:00</span>
+      <div class="progress-bar" id="progressBar" onclick="seekAudio(event)">
+        <div class="progress-current" id="progressCurrent"></div>
+      </div>
+      <span id="durationTime">0:00</span>
+    </div>
+    <div class="controls">
+      <button class="control-btn"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="control-btn play-pause-btn" id="playPauseBtn" onclick="togglePlay()">
+        <svg id="iconPlay" fill="currentColor" viewBox="0 0 24 24" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="iconPause" class="hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="control-btn"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+    </div>
+    <audio id="audioPlayer" src="musica.mp3"></audio>
+  </div>
 
 <script>
+  /* CONFIGURAÇÕES DAS RESPOSTAS */
   const ANSWER1 = "foto";
   const ANSWER2 = "18/10";
   const DAY_MS = 24 * 60 * 60 * 1000;
 
-  function startGame() {
-    introPage.classList.add("hidden");
-    page1.classList.remove("hidden");
-  }
+  function startGame() { introPage.classList.add("hidden"); page1.classList.remove("hidden"); }
 
   function checkAnswer1() {
-    let v = answer1.value.trim().toLowerCase();
-    if (v === ANSWER1) {
-      feedback1.innerText = "Correto!";
+    if (answer1.value.trim().toLowerCase() === ANSWER1) {
+      feedback1.innerText = "Correto! 🎉"; feedback1.style.color = "#1db954";
       hintBox.classList.remove("hidden");
     } else {
-      feedback1.innerText = "Resposta incorreta.";
+      feedback1.innerText = "Incorreto."; feedback1.style.color = "#ff5fa2";
     }
   }
 
-  function goToPage2() {
-    page1.classList.add("hidden");
-    page2.classList.remove("hidden");
-  }
+  function goToPage2() { page1.classList.add("hidden"); page2.classList.remove("hidden"); }
 
   function checkAnswer2() {
-    let v = answer2.value.trim().toLowerCase();
-    if (v === ANSWER2) {
-      feedback2.innerText = "Correto!";
-
-      const unlockTime = Date.now() + DAY_MS;
-      localStorage.setItem("unlockTime", unlockTime);
-
-      page2.classList.add("hidden");
-      countdownPage.classList.remove("hidden");
-
-      startCountdown();
+    if (answer2.value.trim().toLowerCase() === ANSWER2) {
+      feedback2.innerText = "Correto! Iniciando desafio..."; feedback2.style.color = "#1db954";
+      setTimeout(() => {
+        startMemoryGame();
+        const unlockTime = Date.now() + DAY_MS;
+        localStorage.setItem("unlockTime", unlockTime);
+        page2.classList.add("hidden");
+      }, 1000);
     } else {
-      feedback2.innerText = "Resposta incorreta.";
+      feedback2.innerText = "Incorreto."; feedback2.style.color = "#ff5fa2";
     }
   }
 
   function startCountdown() {
     const unlockTime = parseInt(localStorage.getItem("unlockTime"));
     if (!unlockTime) return;
-
     function update() {
-      let now = Date.now();
-      let diff = unlockTime - now;
-
+      let diff = unlockTime - Date.now();
       if (diff <= 0) {
-        countdownBox.innerHTML = "A próxima pista foi liberada!";
+        countdownBox.innerHTML = "A PRÓXIMA PISTA FOI LIBERADA!";
+        countdownBox.style.color = "#1db954";
         return;
       }
-
       let h = Math.floor(diff / (1000 * 60 * 60));
       let m = Math.floor((diff / (1000 * 60)) % 60);
       let s = Math.floor((diff / 1000) % 60);
-
       countdownBox.innerHTML = `${h}h ${m}m ${s}s`;
       requestAnimationFrame(update);
     }
     update();
   }
 
+  function fireConfetti() {
+    var duration = 2 * 500;
+    var end = Date.now() + duration;
+    (function frame() {
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    }());
+  }
+
   window.onload = () => {
-    const unlockTime = localStorage.getItem("unlockTime");
-    if (unlockTime) {
+    if (localStorage.getItem("unlockTime")) {
       introPage.classList.add("hidden");
       page1.classList.add("hidden");
       page2.classList.add("hidden");
       countdownPage.classList.remove("hidden");
+      musicPlayerCard.classList.remove("hidden");
       startCountdown();
+      fireConfetti();
     }
   };
+
+  /* AUDIO PLAYER LOGIC */
+  const audio = document.getElementById('audioPlayer');
+  const progressBar = document.getElementById('progressCurrent');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationTimeEl = document.getElementById('durationTime');
+  const iconPlay = document.getElementById('iconPlay');
+  const iconPause = document.getElementById('iconPause');
+
+  function togglePlay() {
+    if (audio.paused) { audio.play(); iconPlay.classList.add('hidden'); iconPause.classList.remove('hidden'); }
+    else { audio.pause(); iconPlay.classList.remove('hidden'); iconPause.classList.add('hidden'); }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    progressBar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+    currentTimeEl.textContent = fmtTime(audio.currentTime);
+    if (!isNaN(audio.duration)) durationTimeEl.textContent = fmtTime(audio.duration);
+  });
+  
+  function seekAudio(e) {
+    const rect = e.target.parentElement.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  }
+  
+  function fmtTime(s) {
+    return `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+  }
+</script>
+
+<script>
+/* ================= JOGO DA MEMÓRIA (LÓGICA CORRIGIDA E ROBUSTA) ================= */
+
+let hasFlippedCard = false;
+let lockBoard = false;
+let firstCard, secondCard;
+let matchCount = 0;
+
+function startMemoryGame() {
+  document.body.innerHTML = ""; // Limpa tela
+  
+  // Reseta variáveis globais para evitar bugs de estado antigo
+  hasFlippedCard = false;
+  lockBoard = false;
+  firstCard = null;
+  secondCard = null;
+  matchCount = 0;
+
+  let container = document.createElement("div");
+  container.className = "card text-center";
+  container.innerHTML = `
+    <h2>Jogo da Memória</h2>
+    <p>Encontre os pares para avançar!</p>
+    <div id="memoryGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:20px;"></div>
+    <p id="memoryStatus" style="margin-top:20px; font-weight:600; color:var(--secondary-pink); min-height:24px;"></p>
+  `;
+  document.body.appendChild(container);
+
+  // Lista de imagens (Pares)
+  const cardsArray = [
+    { name: 'img1', img: 'foto1.jpg' }, { name: 'img1', img: 'foto1.jpg' },
+    { name: 'img2', img: 'foto2.jpg' }, { name: 'img2', img: 'foto2.jpg' },
+    { name: 'img3', img: 'foto3.jpg' }, { name: 'img3', img: 'foto3.jpg' },
+    { name: 'img4', img: 'foto4.jpg' }, { name: 'img4', img: 'foto4.jpg' },
+    { name: 'img5', img: 'foto5.jpg' }, { name: 'img5', img: 'foto5.jpg' },
+    { name: 'img6', img: 'foto6.jpg' }, { name: 'img6', img: 'foto6.jpg' }
+  ];
+
+  // Embaralhar
+  cardsArray.sort(() => 0.5 - Math.random());
+
+  const grid = document.getElementById('memoryGrid');
+
+  cardsArray.forEach(item => {
+    const card = document.createElement('div');
+    card.classList.add('memory-card');
+    card.dataset.name = item.name; // Identificador do par
+
+    const image = document.createElement('img');
+    image.src = item.img;
+    
+    card.appendChild(image);
+    card.addEventListener('click', flipCard);
+    grid.appendChild(card);
+  });
+}
+
+function flipCard() {
+  // Se o tabuleiro estiver travado ou clicar na mesma carta, sai da função
+  if (lockBoard) return;
+  if (this === firstCard) return;
+
+  this.classList.add('flip'); // Adiciona classe visual
+
+  if (!hasFlippedCard) {
+    // Primeiro clique
+    hasFlippedCard = true;
+    firstCard = this;
+    return;
+  }
+
+  // Segundo clique
+  secondCard = this;
+  checkForMatch();
+}
+
+function checkForMatch() {
+  // Verifica se o data-name é igual
+  let isMatch = firstCard.dataset.name === secondCard.dataset.name;
+
+  isMatch ? disableCards() : unflipCards();
+}
+
+function disableCards() {
+  // É par! Adiciona estilo de vitória e remove evento de clique
+  firstCard.classList.add('winner');
+  secondCard.classList.add('winner');
+  
+  firstCard.removeEventListener('click', flipCard);
+  secondCard.removeEventListener('click', flipCard);
+
+  resetBoard();
+  matchCount++;
+
+  if (matchCount === 6) {
+    const status = document.getElementById("memoryStatus");
+    status.innerText = "Parabéns! Redirecionando...";
+    status.style.color = "#1db954";
+    setTimeout(() => location.reload(), 1500);
+  }
+}
+
+function unflipCards() {
+  lockBoard = true; // Trava o tabuleiro para não clicar em uma terceira
+
+  setTimeout(() => {
+    firstCard.classList.remove('flip');
+    secondCard.classList.remove('flip');
+    resetBoard();
+  }, 1000); // Espera 1 segundo antes de virar de volta
+}
+
+function resetBoard() {
+  [hasFlippedCard, lockBoard] = [false, false];
+  [firstCard, secondCard] = [null, null];
+}
 </script>
 
 </body>
