@@ -182,13 +182,6 @@
       display: flex; align-items: center; justify-content: center;
     }
     .play-pause-btn:hover { transform: scale(1.05); }
-    
-    /* Countdown Box */
-    #countdownBox {
-      margin-top: 20px; padding: 18px; background: rgba(0, 0, 0, 0.2);
-      border: var(--card-border); border-radius: 14px;
-      text-align: center; font-weight: 700; font-size: 1.5rem; color: var(--secondary-pink);
-    }
   </style>
 </head>
 <body>
@@ -238,8 +231,10 @@
     <h2 style="font-size: 2rem; color: var(--secondary-pink);">PARABÉNS!</h2>
     <p>Você passou da primeira fase!</p>
     <p>Foi fácil, né? Bom... foi apenas o começo para você entender a dinâmica; daqui pra frente será diferente, boa sorte!</p>
-    <h2 style="margin-top: 25px; font-size: 1.2rem;">A próxima fase libera em:</h2>
-    <div id="countdownBox">Carregando...</div>
+    
+    <button id="nextPhaseBtn" class="btn-action" onclick="window.location.href='https://arthursiimoes.github.io/laura2'">
+      ACESSAR PRÓXIMA FASE 🚀
+    </button>
   </div>
 
   <div class="card hidden" id="musicPlayerCard">
@@ -274,7 +269,7 @@
   const SYSTEM_PASSWORD = "20/11"; // Senha do enigma binário
   const ANSWER1 = "foto";
   const ANSWER2 = "18/10";
-  const DAY_MS = 24 * 60 * 60 * 1000;
+  // DAY_MS removido pois não há mais tempo de espera
 
   // Função para converter texto para binário
   function textToBinary(text) {
@@ -313,32 +308,13 @@
       feedback2.innerText = "Correto! Iniciando desafio..."; feedback2.style.color = "#1db954";
       setTimeout(() => {
         startMemoryGame();
-        const unlockTime = Date.now() + DAY_MS;
-        localStorage.setItem("unlockTime", unlockTime);
+        // Marca que a fase foi concluída
+        localStorage.setItem("unlockTime", "unlocked"); 
         page2.classList.add("hidden");
       }, 1000);
     } else {
       feedback2.innerText = "Incorreto."; feedback2.style.color = "#ff5fa2";
     }
-  }
-
-  function startCountdown() {
-    const unlockTime = parseInt(localStorage.getItem("unlockTime"));
-    if (!unlockTime) return;
-    function update() {
-      let diff = unlockTime - Date.now();
-      if (diff <= 0) {
-        countdownBox.innerHTML = "A PRÓXIMA PISTA FOI LIBERADA!";
-        countdownBox.style.color = "#1db954";
-        return;
-      }
-      let h = Math.floor(diff / (1000 * 60 * 60));
-      let m = Math.floor((diff / (1000 * 60)) % 60);
-      let s = Math.floor((diff / 1000) % 60);
-      countdownBox.innerHTML = `${h}h ${m}m ${s}s`;
-      requestAnimationFrame(update);
-    }
-    update();
   }
 
   function fireConfetti() {
@@ -364,10 +340,8 @@
       page2.classList.add("hidden");
       countdownPage.classList.remove("hidden");
       musicPlayerCard.classList.remove("hidden");
-      startCountdown();
       fireConfetti();
     }
-    // Se não tiver finalizado, ele mostra a #passwordPage por padrão (definido no HTML)
   };
 
   /* AUDIO PLAYER LOGIC */
