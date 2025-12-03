@@ -104,7 +104,21 @@
     .hidden { display: none !important; }
     .feedback-msg { margin-top: 10px; font-weight: 500; min-height: 24px; }
 
-    /* ================= JOGO DA MEMÓRIA (CSS CORRIGIDO) ================= */
+    /* Estilo do código binário */
+    .binary-box {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--secondary-pink);
+      word-break: break-all;
+      margin: 15px 0;
+      line-height: 1.4;
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 122, 195, 0.2);
+    }
+
+    /* ================= JOGO DA MEMÓRIA ================= */
     .memory-card {
       position: relative;
       width: 100%;
@@ -124,13 +138,12 @@
       width: 100%; height: 100%;
       object-fit: cover;
       border-radius: 14px;
-      opacity: 0; /* Escondido por padrão */
+      opacity: 0; 
       transition: opacity 0.3s ease;
-      pointer-events: none; /* Evita arrastar a imagem */
+      pointer-events: none; 
     }
 
-    /* Classes controladas pelo JS */
-    .memory-card.flip img { opacity: 1; } /* Mostra a foto */
+    .memory-card.flip img { opacity: 1; } 
     .memory-card.winner { 
       border-color: var(--spotify-green) !important; 
       box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
@@ -180,7 +193,18 @@
 </head>
 <body>
 
-  <div class="card text-center" id="introPage">
+  <div class="card text-center" id="passwordPage">
+    <h2>🔐 Acesso Restrito</h2>
+    <p>Para desbloquear o site, decifre o enigma abaixo:</p>
+    
+    <div class="binary-box" id="binaryText">Carregando código...</div>
+
+    <input id="passwordInput" placeholder="Digite a senha...">
+    <button class="btn-action" onclick="checkPassword()">Desbloquear</button>
+    <p id="passwordFeedback" class="feedback-msg"></p>
+  </div>
+
+  <div class="card text-center hidden" id="introPage">
     <h2 class="text-pink" style="margin-top: 20px;">Bem-Vinda, Laura!</h2>
     <p>Antes de começar, vamos a uma explicação breve:</p>
     <p>Cada pergunta te leva a um passo mais perto de algo que preparei pra voce com muito carinho.</p>
@@ -246,10 +270,30 @@
   </div>
 
 <script>
-  /* CONFIGURAÇÕES DAS RESPOSTAS */
+  /* CONFIGURAÇÕES GERAIS */
+  const SYSTEM_PASSWORD = "20/11"; // Senha do enigma binário
   const ANSWER1 = "foto";
   const ANSWER2 = "18/10";
   const DAY_MS = 24 * 60 * 60 * 1000;
+
+  // Função para converter texto para binário
+  function textToBinary(text) {
+    return text.split('').map(char => {
+        return char.charCodeAt(0).toString(2).padStart(8, '0');
+    }).join(' ');
+  }
+
+  // Lógica da senha inicial
+  function checkPassword() {
+    let val = passwordInput.value.trim();
+    if (val === SYSTEM_PASSWORD) {
+        passwordPage.classList.add("hidden");
+        introPage.classList.remove("hidden");
+    } else {
+        passwordFeedback.innerText = "SENHA INCORRETA.\nTente novamente!";
+        passwordFeedback.style.color = "#ff5fa2";
+    }
+  }
 
   function startGame() { introPage.classList.add("hidden"); page1.classList.remove("hidden"); }
 
@@ -308,7 +352,13 @@
   }
 
   window.onload = () => {
+    // Gera o texto binário automaticamente
+    const enigmaPhrase = "Quando eu te disse te amo pela primeira vez";
+    document.getElementById("binaryText").innerText = textToBinary(enigmaPhrase);
+
+    // Verifica se já finalizou o jogo para pular tudo
     if (localStorage.getItem("unlockTime")) {
+      passwordPage.classList.add("hidden"); // Esconde senha
       introPage.classList.add("hidden");
       page1.classList.add("hidden");
       page2.classList.add("hidden");
@@ -317,6 +367,7 @@
       startCountdown();
       fireConfetti();
     }
+    // Se não tiver finalizado, ele mostra a #passwordPage por padrão (definido no HTML)
   };
 
   /* AUDIO PLAYER LOGIC */
@@ -349,7 +400,7 @@
 </script>
 
 <script>
-/* ================= JOGO DA MEMÓRIA (LÓGICA CORRIGIDA E ROBUSTA) ================= */
+/* ================= JOGO DA MEMÓRIA ================= */
 
 let hasFlippedCard = false;
 let lockBoard = false;
@@ -357,9 +408,8 @@ let firstCard, secondCard;
 let matchCount = 0;
 
 function startMemoryGame() {
-  document.body.innerHTML = ""; // Limpa tela
+  document.body.innerHTML = ""; 
   
-  // Reseta variáveis globais para evitar bugs de estado antigo
   hasFlippedCard = false;
   lockBoard = false;
   firstCard = null;
@@ -386,7 +436,6 @@ function startMemoryGame() {
     { name: 'img6', img: 'foto6.jpg' }, { name: 'img6', img: 'foto6.jpg' }
   ];
 
-  // Embaralhar
   cardsArray.sort(() => 0.5 - Math.random());
 
   const grid = document.getElementById('memoryGrid');
@@ -394,7 +443,7 @@ function startMemoryGame() {
   cardsArray.forEach(item => {
     const card = document.createElement('div');
     card.classList.add('memory-card');
-    card.dataset.name = item.name; // Identificador do par
+    card.dataset.name = item.name; 
 
     const image = document.createElement('img');
     image.src = item.img;
@@ -406,33 +455,27 @@ function startMemoryGame() {
 }
 
 function flipCard() {
-  // Se o tabuleiro estiver travado ou clicar na mesma carta, sai da função
   if (lockBoard) return;
   if (this === firstCard) return;
 
-  this.classList.add('flip'); // Adiciona classe visual
+  this.classList.add('flip'); 
 
   if (!hasFlippedCard) {
-    // Primeiro clique
     hasFlippedCard = true;
     firstCard = this;
     return;
   }
 
-  // Segundo clique
   secondCard = this;
   checkForMatch();
 }
 
 function checkForMatch() {
-  // Verifica se o data-name é igual
   let isMatch = firstCard.dataset.name === secondCard.dataset.name;
-
   isMatch ? disableCards() : unflipCards();
 }
 
 function disableCards() {
-  // É par! Adiciona estilo de vitória e remove evento de clique
   firstCard.classList.add('winner');
   secondCard.classList.add('winner');
   
@@ -451,13 +494,13 @@ function disableCards() {
 }
 
 function unflipCards() {
-  lockBoard = true; // Trava o tabuleiro para não clicar em uma terceira
+  lockBoard = true; 
 
   setTimeout(() => {
     firstCard.classList.remove('flip');
     secondCard.classList.remove('flip');
     resetBoard();
-  }, 1000); // Espera 1 segundo antes de virar de volta
+  }, 1000); 
 }
 
 function resetBoard() {
