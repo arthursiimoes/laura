@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enigma</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0a0f24, #1a2240);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 18px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.7s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px);} 
+      to { opacity: 1; transform: translateY(0);} 
+    }
+
+    h2 { margin: 0 0 10px 0; font-weight: 600; }
+    p { opacity: 0.9; }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      background: linear-gradient(135deg, #ff5fa2, #ff7ac3);
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #fff;
+      transition: 0.2s;
+    }
+    button:hover { transform: scale(1.03); }
+
+    .hidden { display: none !important; }
+
+    /* Countdown */
+    #countdownBox {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+    }
+
+    .countdown-photo {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 18px;
+      filter: brightness(0.9) contrast(1.1) saturate(1.2) drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+      margin-top: 20px;
+    }
+
+    /* Tela inicial */
+    #introPage h2 { font-size: 26px; text-align:center; }
+    #introPage p { text-align:center; }
+    #countdownPage { text-align:center; }
+  </style>
+
+</head>
+<body>
+
+  <!-- TELA INICIAL ORGANIZADA -->
+  <div class="card" id="introPage">
+    <h2>Bem-Vinda, Laura!</h2>
+    <p>Antes de começar, vamos a uma explicação breve:
+    <p>Cada pergunta te leva a um passo mais perto de algo que preparei pra voce com muito carinho.</p>
+    <p>Voce passará por enigmas, perguntas, e alguns jogos que preparei para conseguir desbloquear a próxima fase, espero que goste.</p>
+    <h2>BOA SORTE!</h2>
+    <button onclick="startGame()">VAMOS COMEÇAR?</button>
+  </div>
+
+  <!-- ENIGMA 1 -->
+  <div class="card hidden" id="page1">
+    <h2>Pergunta #1 (Charada)</h2>
+    <p>“Tenho memória, mas não penso. Guardo momentos, mas não falo. Sou pequena, mas seguro o nosso mundo inteiro. O que sou?”</p>
+
+    <input id="answer1" placeholder="Digite a resposta...">
+    <button onclick="checkAnswer1()">Enviar</button>
+    <p id="feedback1"></p>
+
+    <div id="hintBox" class="hidden">
+      <p><b>DICA:</b> Procure onde tudo começou...</p>
+      <button onclick="goToPage2()">Ir para próxima pista</button>
+    </div>
+  </div>
+
+  <!-- ENIGMA 2 -->
+  <div class="card hidden" id="page2">
+    <h2>Pergunta #2 (Momentos)</h2>
+    <p>“Quando foi a primeira vez onde nossos olhares falaram mais do que palavras?”</p>
+
+    <input id="answer2" placeholder="Digite a resposta...">
+    <button onclick="checkAnswer2()">Enviar</button>
+    <p id="feedback2"></p>
+  </div>
+
+  <!-- COUNTDOWN FINAL -->
+  <div class="card hidden" id="countdownPage">
+    <img src="FOTO2.jpg" class="countdown-photo" />
+    <h2>PARABÉNS</h2>
+    <p>Você passou da primeira fase!</p>
+    <p>Foi fácil, né? Bom... foi apenas o começo para você entender a dinâmica; daqui pra frente será mais diferente, boa sorte!</p>
+    <h2>Próxima pista em:</h2>
+    <div id="countdownBox">Carregando...</div>
+  </div>
+
+
+<script>
+  const ANSWER1 = "foto";
+  const ANSWER2 = "18/10";
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  function startGame() {
+    introPage.classList.add("hidden");
+    page1.classList.remove("hidden");
+  }
+
+  function checkAnswer1() {
+    let v = answer1.value.trim().toLowerCase();
+    if (v === ANSWER1) {
+      feedback1.innerText = "Correto!";
+      hintBox.classList.remove("hidden");
+    } else {
+      feedback1.innerText = "Resposta incorreta.";
+    }
+  }
+
+  function goToPage2() {
+    page1.classList.add("hidden");
+    page2.classList.remove("hidden");
+  }
+
+  function checkAnswer2() {
+    let v = answer2.value.trim().toLowerCase();
+    if (v === ANSWER2) {
+      feedback2.innerText = "Correto!";
+
+      const unlockTime = Date.now() + DAY_MS;
+      localStorage.setItem("unlockTime", unlockTime);
+
+      page2.classList.add("hidden");
+      countdownPage.classList.remove("hidden");
+
+      startCountdown();
+    } else {
+      feedback2.innerText = "Resposta incorreta.";
+    }
+  }
+
+  function startCountdown() {
+    const unlockTime = parseInt(localStorage.getItem("unlockTime"));
+    if (!unlockTime) return;
+
+    function update() {
+      let now = Date.now();
+      let diff = unlockTime - now;
+
+      if (diff <= 0) {
+        countdownBox.innerHTML = "A próxima pista foi liberada!";
+        return;
+      }
+
+      let h = Math.floor(diff / (1000 * 60 * 60));
+      let m = Math.floor((diff / (1000 * 60)) % 60);
+      let s = Math.floor((diff / 1000) % 60);
+
+      countdownBox.innerHTML = `${h}h ${m}m ${s}s`;
+      requestAnimationFrame(update);
+    }
+    update();
+  }
+
+  window.onload = () => {
+    const unlockTime = localStorage.getItem("unlockTime");
+    if (unlockTime) {
+      introPage.classList.add("hidden");
+      page1.classList.add("hidden");
+      page2.classList.add("hidden");
+      countdownPage.classList.remove("hidden");
+      startCountdown();
+    }
+  };
+</script>
+
+</body>
+</html>
